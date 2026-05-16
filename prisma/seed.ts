@@ -5,7 +5,7 @@ import {
   Role,
   TriggerType,
   UomType,
-} from "@prisma/client";
+} from "../lib/generated/prisma";
 import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma";
 import { calculateAchievementScore } from "../lib/scoring";
