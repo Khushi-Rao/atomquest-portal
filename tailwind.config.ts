@@ -9,12 +9,36 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
+        primary: {
+          DEFAULT: "#534AB7",
+          light: "#EEEDFE",
+          text: "#3C3489",
+        },
+        success: {
+          DEFAULT: "#1D9E75",
+          light: "#E1F5EE",
+          text: "#085041",
+        },
+        warning: {
+          DEFAULT: "#EF9F27",
+          light: "#FAEEDA",
+          text: "#633806",
+        },
+        danger: {
+          DEFAULT: "#E24B4A",
+          light: "#FCEBEB",
+          text: "#791F1F",
+        },
+        surface: "#f8f7f4",
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {
@@ -24,10 +48,6 @@ const config: Config = {
         popover: {
           DEFAULT: "var(--popover)",
           foreground: "var(--popover-foreground)",
-        },
-        primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--primary-foreground)",
         },
         secondary: {
           DEFAULT: "var(--secondary)",
