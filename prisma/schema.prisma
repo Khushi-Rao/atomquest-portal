@@ -1,13 +1,165 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+enum UomType {
+  MIN
+  MAX
+  TIMELINE
+  ZERO
+}
+
+enum GoalStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  RETURNED
+}
+
+enum AchievementStatus {
+  NOT_STARTED
+  ON_TRACK
+  COMPLETED
+}
+
+enum Quarter {
+  Q1
+  Q2
+  Q3
+  Q4
+  ANNUAL
+}
+
+enum TriggerType {
+  NO_SUBMISSION
+  NO_APPROVAL
+  NO_CHECKIN
+}
+
+model User {
+  id               String            @id @default(uuid())
+  name             String
+  email            String            @unique
+  passwordHash     String
+  role             Role
+  department       String            @default("General")
+  managerId        String?
+  manager          User?             @relation("Reports", fields: [managerId], references: [id])
+  reports          User[]            @relation("Reports")
+  goals            Goal[]
+  achievements     Achievement[]
+  givenComments    CheckinComment[]  @relation("ManagerComments")
+  receivedComments CheckinComment[]  @relation("EmployeeComments")
+  auditLogs        AuditLog[]
+  escalationEvents EscalationEvent[]
+  createdAt        DateTime          @default(now())
+}
+
+model Goal {
+  id               String            @id @default(uuid())
+  employeeId       String
+  employee         User              @relation(fields: [employeeId], references: [id])
+  thrustArea       String
+  title            String
+  description      String?
+  uomType          UomType
+  target           Float
+  deadline         DateTime?
+  weightage        Float
+  status           GoalStatus        @default(DRAFT)
+  locked           Boolean           @default(false)
+  isShared         Boolean           @default(false)
+  sharedFromId     String?
+  sharedFrom       Goal?             @relation("SharedGoals", fields: [sharedFromId], references: [id])
+  linkedGoals      Goal[]            @relation("SharedGoals")
+  returnReason     String?
+  achievements     Achievement[]
+  auditLogs        AuditLog[]
+  escalationEvents EscalationEvent[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model Achievement {
+  id             String            @id @default(uuid())
+  goalId         String
+  goal           Goal              @relation(fields: [goalId], references: [id])
+  employeeId     String
+  employee       User              @relation(fields: [employeeId], references: [id])
+  quarter        Quarter
+  actual         Float?
+  completionDate DateTime?
+  status         AchievementStatus @default(NOT_STARTED)
+  score          Float?
+  loggedAt       DateTime          @default(now())
+
+  @@unique([goalId, quarter])
+}
+
+model CheckinComment {
+  id         String   @id @default(uuid())
+  managerId  String
+  manager    User     @relation("ManagerComments", fields: [managerId], references: [id])
+  employeeId String
+  employee   User     @relation("EmployeeComments", fields: [employeeId], references: [id])
+  quarter    Quarter
+  comment    String
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  goalId      String
+  goal        Goal     @relation(fields: [goalId], references: [id])
+  changedById String
+  changedBy   User     @relation(fields: [changedById], references: [id])
+  fieldName   String
+  oldValue    String?
+  newValue    String?
+  changedAt   DateTime @default(now())
+}
+
+model Cycle {
+  id        String   @id @default(uuid())
+  name      String
+  quarter   Quarter
+  opensAt   DateTime
+  closesAt  DateTime
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model EscalationRule {
+  id            String            @id @default(uuid())
+  name          String
+  triggerType   TriggerType
+  thresholdDays Int
+  isActive      Boolean           @default(true)
+  events        EscalationEvent[]
+  createdAt     DateTime          @default(now())
+}
+
+model EscalationEvent {
+  id              String         @id @default(uuid())
+  ruleId          String
+  rule            EscalationRule @relation(fields: [ruleId], references: [id])
+  targetUserId    String
+  targetUser      User           @relation(fields: [targetUserId], references: [id])
+  goalId          String?
+  goal            Goal?          @relation(fields: [goalId], references: [id])
+  triggerType     TriggerType
+  description     String
+  escalationLevel Int            @default(1)
+  resolvedAt      DateTime?
+  createdAt       DateTime       @default(now())
 }
